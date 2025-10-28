@@ -183,7 +183,6 @@ pub enum PipelineError {
     Database {
         operation: String,
         table: String,
-        #[source]
         source: DatabaseError,
     },
 
@@ -191,7 +190,6 @@ pub enum PipelineError {
     Inference {
         model: String,
         message: String,
-        #[source]
         source: InferenceError,
     },
 
@@ -200,8 +198,6 @@ pub enum PipelineError {
         pipeline_id: PipelineId,
         stage: String,
         message: String,
-        #[source]
-        source: Box<dyn Error + Send + Sync>,
     },
 
     #[error("Performance contract violation: {operation} took {actual:?}, expected <{expected:?}")]
@@ -261,6 +257,99 @@ pub enum PipelineError {
         component: String,
         message: String,
     },
+}
+
+// Manual Clone implementation for PipelineError
+impl Clone for PipelineError {
+    fn clone(&self) -> Self {
+        match self {
+            PipelineError::Database { operation, table, source } => {
+                PipelineError::Database {
+                    operation: operation.clone(),
+                    table: table.clone(),
+                    source: source.clone(),
+                }
+            }
+            PipelineError::Inference { model, message, source } => {
+                PipelineError::Inference {
+                    model: model.clone(),
+                    message: message.clone(),
+                    source: source.clone(),
+                }
+            }
+            PipelineError::Pipeline { pipeline_id, stage, message } => {
+                PipelineError::Pipeline {
+                    pipeline_id: *pipeline_id,
+                    stage: stage.clone(),
+                    message: message.clone(),
+                }
+            }
+            PipelineError::PerformanceContract { operation, actual, expected } => {
+                PipelineError::PerformanceContract {
+                    operation: operation.clone(),
+                    actual: *actual,
+                    expected: *expected,
+                }
+            }
+            PipelineError::ResourceExhaustion { resource, used, limit } => {
+                PipelineError::ResourceExhaustion {
+                    resource: resource.clone(),
+                    used: *used,
+                    limit: *limit,
+                }
+            }
+            PipelineError::Configuration { section, field, value } => {
+                PipelineError::Configuration {
+                    section: section.clone(),
+                    field: field.clone(),
+                    value: value.clone(),
+                }
+            }
+            PipelineError::MemoryLimitExceeded { used_mb, limit_mb } => {
+                PipelineError::MemoryLimitExceeded {
+                    used_mb: *used_mb,
+                    limit_mb: *limit_mb,
+                }
+            }
+            PipelineError::Timeout { operation, duration } => {
+                PipelineError::Timeout {
+                    operation: operation.clone(),
+                    duration: *duration,
+                }
+            }
+            PipelineError::InvalidStateTransition { current_state, target_state } => {
+                PipelineError::InvalidStateTransition {
+                    current_state: current_state.clone(),
+                    target_state: target_state.clone(),
+                }
+            }
+            PipelineError::ConcurrencyLimitExceeded { current, max } => {
+                PipelineError::ConcurrencyLimitExceeded {
+                    current: *current,
+                    max: *max,
+                }
+            }
+            PipelineError::CheckpointError { checkpoint_id, reason } => {
+                PipelineError::CheckpointError {
+                    checkpoint_id: checkpoint_id.clone(),
+                    reason: reason.clone(),
+                }
+            }
+            PipelineError::RecoveryFailed { pipeline_id, checkpoint_id, reason } => {
+                PipelineError::RecoveryFailed {
+                    pipeline_id: *pipeline_id,
+                    checkpoint_id: checkpoint_id.clone(),
+                    reason: reason.clone(),
+                }
+            }
+            PipelineError::Monitoring { component, message } => {
+                PipelineError::Monitoring {
+                    component: component.clone(),
+                    message: message.clone(),
+                }
+            }
+        }
+    }
 }
 
 /// System-level errors for infrastructure issues
@@ -455,6 +544,14 @@ impl DobbyError for InferenceError {
             InferenceError::InferenceTimeout { .. } => ErrorSeverity::Error,
             InferenceError::InvalidInputFormat { .. } => ErrorSeverity::Warning,
             InferenceError::OutputGenerationFailed { .. } => ErrorSeverity::Error,
+            InferenceError::BatchProcessingFailed { .. } => ErrorSeverity::Error,
+            InferenceError::StreamingError { .. } => ErrorSeverity::Warning,
+            InferenceError::ResourceTemporarilyUnavailable { .. } => ErrorSeverity::Warning,
+            InferenceError::ConfigurationError { .. } => ErrorSeverity::Critical,
+            InferenceError::PerformanceContractViolation { .. } => ErrorSeverity::Error,
+            InferenceError::SessionCreationFailed { .. } => ErrorSeverity::Error,
+            InferenceError::TokenizationError { .. } => ErrorSeverity::Error,
+            InferenceError::DetokenizationError { .. } => ErrorSeverity::Error,
         }
     }
 
@@ -472,6 +569,14 @@ impl DobbyError for InferenceError {
             InferenceError::InferenceTimeout { .. } => RetryRecommendation::Retry,
             InferenceError::InvalidInputFormat { .. } => RetryRecommendation::NoRetry,
             InferenceError::OutputGenerationFailed { .. } => RetryRecommendation::Retry,
+            InferenceError::BatchProcessingFailed { .. } => RetryRecommendation::Retry,
+            InferenceError::StreamingError { .. } => RetryRecommendation::Retry,
+            InferenceError::ResourceTemporarilyUnavailable { .. } => RetryRecommendation::Backoff,
+            InferenceError::ConfigurationError { .. } => RetryRecommendation::NoRetry,
+            InferenceError::PerformanceContractViolation { .. } => RetryRecommendation::Escalate,
+            InferenceError::SessionCreationFailed { .. } => RetryRecommendation::Backoff,
+            InferenceError::TokenizationError { .. } => RetryRecommendation::Retry,
+            InferenceError::DetokenizationError { .. } => RetryRecommendation::Retry,
         }
     }
 
@@ -492,6 +597,14 @@ impl DobbyError for InferenceError {
                 InferenceError::InferenceTimeout { operation, .. } => format!("run_inference: {}", operation),
                 InferenceError::InvalidInputFormat { .. } => "validate_format".to_string(),
                 InferenceError::OutputGenerationFailed { .. } => "generate_output".to_string(),
+                InferenceError::BatchProcessingFailed { .. } => "process_batch".to_string(),
+                InferenceError::StreamingError { .. } => "stream_inference".to_string(),
+                InferenceError::ResourceTemporarilyUnavailable { resource, .. } => format!("acquire_resource: {}", resource),
+                InferenceError::ConfigurationError { parameter, .. } => format!("configure_parameter: {}", parameter),
+                InferenceError::PerformanceContractViolation { contract_type, .. } => format!("validate_contract: {}", contract_type),
+                InferenceError::SessionCreationFailed { .. } => "create_session".to_string(),
+                InferenceError::TokenizationError { .. } => "tokenize_text".to_string(),
+                InferenceError::DetokenizationError { .. } => "detokenize_tokens".to_string(),
             },
             metadata: std::collections::HashMap::new(),
             trace: vec![],

@@ -182,9 +182,8 @@ impl InferenceEngine for TraitInferenceEngine {
             Ok(_) => Ok(ModelHealth::Healthy),
             Err(_) => Ok(ModelHealth::Unhealthy {
                 reason: "Health check inference failed".to_string(),
-                error: InferenceError::ModelNotLoaded {
-                    model_path: "health_check".to_string(),
-                    source: Box::new(std::io::Error::new(std::io::ErrorKind::Other, "test failed")),
+                error: InferenceError::ModelNotFound {
+                    model_id: "health_check".to_string(),
                 },
             }),
         }
