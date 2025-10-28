@@ -36,6 +36,7 @@ use super::error::{DatabaseError, DobbyError};
 pub struct DatabaseId(pub uuid::Uuid);
 
 /// Database connection trait with lifecycle management
+#[async_trait]
 pub trait DatabaseConnection: Send + Sync {
     type Error: DobbyError + Send + Sync + 'static;
 

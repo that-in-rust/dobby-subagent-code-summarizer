@@ -558,8 +558,8 @@ impl PipelineOrchestrator {
     }
 
     fn calculate_retry_delay(&self, attempt: usize) -> Duration {
-        let delay = self.config.retry_config.base_delay * self.config.retry_config.backoff_multiplier.powi(attempt as i32);
-        std::cmp::min(delay, self.config.retry_config.max_delay)
+        let delay = (self.config.retry_config.base_delay as f64 * self.config.retry_config.backoff_multiplier.powi(attempt as i32)) as u32;
+        Duration::from_millis(std::cmp::min(delay, self.config.retry_config.max_delay))
     }
 
     async fn store_file_metadata(&self, job_id: &JobId, path: &str, size: usize) -> Result<(), PipelineError> {

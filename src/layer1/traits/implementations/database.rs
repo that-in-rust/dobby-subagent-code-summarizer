@@ -379,7 +379,7 @@ impl DatabaseConnection for MockDatabaseConnection {
 
     fn connection_info(&self) -> ConnectionInfo {
         ConnectionInfo {
-            database_id: DatabaseId(Uuid::new_v4()),
+            database_id: crate::layer1::traits::database::DatabaseId(uuid::Uuid::new_v4()),
             created_at: self.created_at,
             last_used: chrono::Utc::now(), // Would use actual last_used
             query_count: self.query_count.load(Ordering::SeqCst),
@@ -445,7 +445,7 @@ impl DatabaseProvider for MockDatabaseProvider {
         &self,
         query: &str,
         params: QueryParams,
-    ) -> Result<Vec<DatabaseRecord>, Self::Error> {
+    ) -> Result<Vec<TraitDatabaseRecord>, Self::Error> {
         let tracker = PerformanceTracker::new("execute_query_simple", Duration::from_millis(50));
 
         tracing::debug!(
@@ -462,7 +462,7 @@ impl DatabaseProvider for MockDatabaseProvider {
     }
 
   
-    async fn health_check(&self) -> Result<HealthStatus, Self::Error> {
+    async fn health_check(&self) -> Result<TraitHealthStatus, Self::Error> {
         let tracker = PerformanceTracker::new("health_check", Duration::from_millis(50));
 
         // Simulate health check with realistic timing
@@ -473,16 +473,16 @@ impl DatabaseProvider for MockDatabaseProvider {
 
         // Determine health status based on connection usage
         let status = if active_connections == 0 {
-            HealthStatus::Healthy
+            TraitHealthStatus::Healthy
         } else if active_connections < self.max_connections {
-            HealthStatus::Degraded {
+            TraitHealthStatus::Degraded {
                 reason: format!("High connection usage: {}/{}", active_connections, self.max_connections),
-                severity: Severity::Warning,
+                severity: crate::layer1::traits::database::Severity::Warning,
             }
         } else {
-            HealthStatus::Degraded {
+            TraitHealthStatus::Degraded {
                 reason: "Maximum connection limit reached".to_string(),
-                severity: Severity::Error,
+                severity: crate::layer1::traits::database::Severity::Error,
             }
         };
 
@@ -533,12 +533,13 @@ impl PerformanceTracker {
 }
 
 // Implement the extension trait for advanced features
+#[async_trait]
 impl DatabaseProviderExt for MockDatabaseProvider {
     async fn fetch_records_stream(
         &self,
         query: &str,
         params: QueryParams,
-    ) -> Result<Box<dyn futures::Stream<Item = Result<DatabaseRecord, Self::Error>> + Send>, Self::Error> {
+    ) -> Result<Box<dyn futures::Stream<Item = Result<TraitDatabaseRecord, Self::Error>> + Send>, Self::Error> {
         let tracker = PerformanceTracker::new("fetch_records_stream", Duration::from_millis(100));
 
         tracing::debug!(
@@ -664,17 +665,25 @@ impl MockTestFactory {
     }
 
     /// Generate mock records for testing and demonstration
-    pub async fn generate_mock_records(&self, _query: &str, _params: &QueryParams) -> Vec<DatabaseRecord> {
+    pub async fn generate_mock_records(&self, _query: &str, _params: &QueryParams) -> Vec<TraitDatabaseRecord> {
         let mut records = Vec::new();
 
         for i in 0..5 {
-            let record = DatabaseRecord {
-                id: RecordId::new(),
-                content: format!("Mock content for record {}", i + 1),
-                metadata: std::collections::HashMap::from([
-                    ("source".to_string(), serde_json::Value::String("mock_generator".to_string())),
-                    ("timestamp".to_string(), serde_json::Value::String(chrono::Utc::now().to_rfc3339())),
-                ]),
+            let record = TraitDatabaseRecord {
+                id: crate::layer1::traits::database::RecordId(uuid::Uuid::new_v4()),
+                content: crate::layer1::traits::database::Content::Text(format!("Mock content for record {}", i + 1)),
+                metadata: crate::layer1::traits::database::RecordMetadata {
+                    source: "mock_generator".to_string(),
+                    content_type: crate::layer1::traits::database::ContentType::Code,
+                    size_bytes: 50,
+                    processing_state: crate::layer1::traits::database::ProcessingState::Pending,
+                    priority: crate::layer1::traits::database::Priority::Normal,
+                    custom_fields: std::collections::HashMap::from([
+                        ("timestamp".to_string(), serde_json::Value::String(chrono::Utc::now().to_rfc3339())),
+                    ]),
+                },
+                created_at: chrono::Utc::now(),
+                updated_at: chrono::Utc::now(),
             };
             records.push(record);
         }

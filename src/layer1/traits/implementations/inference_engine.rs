@@ -327,7 +327,7 @@ impl InferenceEngineExt for TraitInferenceEngine {
     async fn infer_stream(
         &self,
         input_stream: impl Stream<Item = Self::Input> + Send,
-    ) -> Result<impl Stream<Item = Result<Self::Output, Self::Error>> + Send, Self::Error> {
+    ) -> Result<Box<dyn Stream<Item = Result<Self::Output, Self::Error>> + Send>, Self::Error> {
         let (tx, rx) = mpsc::channel(100); // Buffer size for backpressure
         let engine = self.clone();
 
@@ -355,7 +355,7 @@ impl InferenceEngineExt for TraitInferenceEngine {
             }
         });
 
-        Ok(ReceiverStream::new(rx))
+        Ok(Box::new(ReceiverStream::new(rx)))
     }
 
     async fn benchmark(&self, test_cases: &[BenchmarkCase]) -> Result<BenchmarkResults, Self::Error> {
