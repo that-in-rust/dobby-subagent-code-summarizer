@@ -12,6 +12,9 @@ pub mod errors;
 // Layer 1 Core Traits (TDD-First Architecture)
 pub mod layer1;
 
+// CozoDB Database-First Architecture
+pub mod cozodb;
+
 // Re-export main components for parallel_summarizer
 pub use chunking::{TextChunker, Chunk};
 pub use config::SystemConfig;

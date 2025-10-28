@@ -68,8 +68,8 @@ env_logger = "0.11"
 tracing = "0.1"
 tracing-subscriber = "0.3"
 
-# Database dependencies (temporarily disabled for TDD phase)
-# cozo = "0.7"  # Disabled due to compilation conflicts
+# Database dependencies for database-first architecture
+# cozo = "0.7"  # Temporarily disabled due to dependency compilation issues
 
 # Array operations for ONNX compatibility
 
