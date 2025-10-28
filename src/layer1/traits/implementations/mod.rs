@@ -15,6 +15,7 @@
 //! - inference_engine: Production-ready InferenceEngine trait implementation
 //! - pipeline_orchestrator: High-level orchestration combining database and inference
 
+pub mod database;  // Database mock implementations
 pub mod database_simple;  // Simple GREEN phase implementation
 pub mod production_database;  // REFACTOR phase production implementation
 pub mod inference_engine;  // Production-ready InferenceEngine implementation

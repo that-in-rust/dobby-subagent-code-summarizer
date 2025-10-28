@@ -40,6 +40,9 @@ serde_json = "1.0"
 # System metrics
 sysinfo = "0.30"
 
+# Memory monitoring
+memory-stats = "1.1"
+
 # CPU core count detection for parallel processing
 num_cpus = "1.16"
 
@@ -49,12 +52,24 @@ rand = "0.8"
 # CLI argument parsing
 clap = { version = "4.0", features = ["derive"] }
 
+# Async streams for tokio compatibility
+tokio-stream = "0.1"
+
 # Date/time for file naming
 chrono = { version = "0.4", features = ["serde"] }
+
+# ONNX Runtime for model inference
+ort = { version = "1.16", features = ["load-dynamic"] }
 
 # Logging
 log = "0.4"
 env_logger = "0.11"
+
+# Database dependencies (temporarily disabled for TDD phase)
+# cozo = "0.7"  # Disabled due to compilation conflicts
+
+# Array operations for ONNX compatibility
+ndarray = "0.15"
 
 [build-dependencies]
 # bindgen = { workspace = true }
@@ -92,7 +107,6 @@ parking_lot = "0.12"
 
 # Enhanced async utilities
 tokio-util = "0.7"
-tokio-stream = "0.1"
 
 # Exponential backoff for retry logic
 backoff = "0.4"
@@ -128,4 +142,4 @@ panic = "abort"
 
 [profile.dev]
 debug = true
-overflow-checks = truecozo = "0.10"
+overflow-checks = true

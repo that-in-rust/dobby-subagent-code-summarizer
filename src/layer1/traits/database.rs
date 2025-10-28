@@ -29,6 +29,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use super::error::{DatabaseError, DobbyError};
 
 /// Strongly-typed database identifier
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -36,7 +37,7 @@ pub struct DatabaseId(pub uuid::Uuid);
 
 /// Database connection trait with lifecycle management
 pub trait DatabaseConnection: Send + Sync {
-    type Error: DatabaseError + Send + Sync + 'static;
+    type Error: DobbyError + Send + Sync + 'static;
 
     /// Check if connection is healthy and ready for queries
     async fn is_healthy(&self) -> Result<bool, Self::Error>;
@@ -54,7 +55,7 @@ pub trait DatabaseProvider: Send + Sync + 'static {
     /// Connection type with lifetime management
     type Connection: DatabaseConnection + Send + Sync;
     /// Error type with detailed context
-    type Error: DatabaseError + Send + Sync + 'static;
+    type Error: DobbyError + Send + Sync + 'static;
 
     /// Establish connection with automatic retry and circuit breaking
     ///
@@ -325,4 +326,21 @@ pub enum OperationType {
     Delete,
     Create,
     Drop,
+}
+
+/// Database health status
+#[derive(Debug, Clone)]
+pub enum DatabaseHealth {
+    Healthy,
+    Degraded { reason: String, impact: DegradationImpact },
+    Unhealthy { reason: String, error: DatabaseError },
+}
+
+/// Database degradation impact levels
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum DegradationImpact {
+    Low,
+    Medium,
+    High,
+    Critical,
 }

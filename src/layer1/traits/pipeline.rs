@@ -29,6 +29,7 @@ use async_trait::async_trait;
 use std::fmt::Debug;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use super::error::{PipelineError, DobbyError};
 
 /// Pipeline identifier for tracking
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -222,7 +223,7 @@ pub trait PipelineOrchestrator: Send + Sync + 'static {
     /// Pipeline configuration type
     type Config: PipelineConfig + Send + Sync;
     /// Pipeline error type
-    type Error: PipelineError + Send + Sync + 'static;
+    type Error: DobbyError + Send + Sync + 'static;
 
     /// Execute complete pipeline with monitoring and error recovery
     ///

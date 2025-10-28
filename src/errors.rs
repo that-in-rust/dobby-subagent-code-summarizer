@@ -78,9 +78,9 @@ pub enum ProcessingError {
     },
 }
 
-// Convert candle::Error to ProcessingError
-impl From<candle::Error> for ProcessingError {
-    fn from(err: candle::Error) -> Self {
+// Convert candle_core::Error to ProcessingError
+impl From<candle_core::Error> for ProcessingError {
+    fn from(err: candle_core::Error) -> Self {
         ProcessingError::CandleError(err.to_string())
     }
 }

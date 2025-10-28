@@ -7,6 +7,8 @@ use crate::layer1::traits::inference::*;
 use crate::layer1::traits::database::*;
 use crate::layer1::traits::error::*;
 use crate::layer1::traits::implementations::inference_engine::TraitInferenceEngine;
+use crate::layer1::traits::implementations::database::MockDatabaseConnection;
+use crate::layer1::traits::database::{DatabaseHealth, DegradationImpact};
 use async_trait::async_trait;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -16,8 +18,8 @@ use uuid::Uuid;
 
 /// Pipeline orchestrator that combines database and inference operations
 pub struct PipelineOrchestrator {
-    inference_engine: Arc<dyn InferenceEngine<Output = InferenceResult, Error = InferenceError>>,
-    database_provider: Arc<dyn DatabaseProvider<Error = DatabaseError>>,
+    inference_engine: Arc<dyn InferenceEngine<Output = InferenceResult, Error = InferenceError, Input = String, ModelInfo = ConcreteModelInfo>>,
+    database_provider: Arc<dyn DatabaseProvider<Error = DatabaseError, Connection = MockDatabaseConnection>>,
     config: PipelineConfig,
     semaphore: Arc<Semaphore>,
 }

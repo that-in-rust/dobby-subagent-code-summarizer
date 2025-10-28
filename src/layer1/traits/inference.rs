@@ -29,6 +29,8 @@ use async_trait::async_trait;
 use std::fmt::Debug;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use crate::errors::{ProcessingError, InferenceError};
+use super::error::DobbyError;
 
 /// Model identifier with type safety
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -257,7 +259,7 @@ pub trait InferenceEngine: Send + Sync + 'static {
     /// Output type from inference
     type Output: Send + Sync + 'static;
     /// Error type with detailed inference context
-    type Error: InferenceError + Send + Sync + 'static;
+    type Error: DobbyError + Send + Sync + 'static;
     /// Model information with capabilities
     type ModelInfo: ModelInfo + Send + Sync;
 
