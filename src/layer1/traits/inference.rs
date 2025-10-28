@@ -211,6 +211,8 @@ pub struct InferenceMetadata {
     pub top_p: Option<f64>,
     pub top_k: Option<usize>,
     pub max_new_tokens: Option<usize>,
+    pub min_length: Option<usize>,
+    pub repetition_penalty: Option<f64>,
     pub stop_sequences: Vec<String>,
     pub prompt_template: Option<String>,
     pub custom_data: std::collections::HashMap<String, serde_json::Value>,

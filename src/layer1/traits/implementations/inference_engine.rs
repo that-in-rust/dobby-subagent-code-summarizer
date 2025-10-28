@@ -69,7 +69,7 @@ impl TraitInferenceEngine {
 #[async_trait]
 impl InferenceEngine for TraitInferenceEngine {
     type Input = String;
-    type Output = InferenceResult;
+    type Output = InferenceResult<TraitModelInfo>;
     type Error = InferenceError;
     type ModelInfo = TraitModelInfo;
 
