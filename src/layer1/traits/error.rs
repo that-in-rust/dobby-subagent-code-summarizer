@@ -85,6 +85,63 @@ pub enum DatabaseError {
     },
 }
 
+// Manual Clone implementation for DatabaseError
+impl Clone for DatabaseError {
+    fn clone(&self) -> Self {
+        match self {
+            DatabaseError::Connection { message, source } => {
+                DatabaseError::Connection {
+                    message: message.clone(),
+                    source: source.as_ref().map(|s| format!("{}", s)).map(|msg| Box::new(std::io::Error::new(std::io::ErrorKind::Other, msg)) as Box<dyn Error + Send + Sync>),
+                }
+            }
+            DatabaseError::QueryExecution { query, params, source } => {
+                DatabaseError::QueryExecution {
+                    query: query.clone(),
+                    params: params.clone(),
+                    source: Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{}", source))) as Box<dyn Error + Send + Sync>,
+                }
+            }
+            DatabaseError::Transaction { message, source } => {
+                DatabaseError::Transaction {
+                    message: message.clone(),
+                    source: source.as_ref().map(|s| format!("{}", s)).map(|msg| Box::new(std::io::Error::new(std::io::ErrorKind::Other, msg)) as Box<dyn Error + Send + Sync>),
+                }
+            }
+            DatabaseError::SchemaValidation { field, expected, actual } => {
+                DatabaseError::SchemaValidation {
+                    field: field.clone(),
+                    expected: expected.clone(),
+                    actual: actual.clone(),
+                }
+            }
+            DatabaseError::ResourceLimitExceeded { resource, used, limit } => {
+                DatabaseError::ResourceLimitExceeded {
+                    resource: resource.clone(),
+                    used: *used,
+                    limit: *limit,
+                }
+            }
+            DatabaseError::InvalidConnectionString { connection_string } => {
+                DatabaseError::InvalidConnectionString {
+                    connection_string: connection_string.clone(),
+                }
+            }
+            DatabaseError::InvalidQuery { query } => {
+                DatabaseError::InvalidQuery {
+                    query: query.clone(),
+                }
+            }
+            DatabaseError::Timeout { operation, duration } => {
+                DatabaseError::Timeout {
+                    operation: operation.clone(),
+                    duration: *duration,
+                }
+            }
+        }
+    }
+}
+
 /// Inference-specific errors with model context
 #[derive(Debug)]
 #[derive(Error)]
@@ -176,8 +233,133 @@ pub enum InferenceError {
     DetokenizationError { reason: String },
 }
 
+// Manual Clone implementation for InferenceError
+impl Clone for InferenceError {
+    fn clone(&self) -> Self {
+        match self {
+            InferenceError::ModelLoading { model_path, source } => {
+                InferenceError::ModelLoading {
+                    model_path: model_path.clone(),
+                    source: Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{}", source))) as Box<dyn Error + Send + Sync>,
+                }
+            }
+            InferenceError::Execution { stage, source } => {
+                InferenceError::Execution {
+                    stage: stage.clone(),
+                    source: Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{}", source))) as Box<dyn Error + Send + Sync>,
+                }
+            }
+            InferenceError::MetalUnavailable { reason } => {
+                InferenceError::MetalUnavailable {
+                    reason: reason.clone(),
+                }
+            }
+            InferenceError::SessionPoolExhausted { requested, available } => {
+                InferenceError::SessionPoolExhausted {
+                    requested: *requested,
+                    available: *available,
+                }
+            }
+            InferenceError::Quantization { quantization_type, source } => {
+                InferenceError::Quantization {
+                    quantization_type: quantization_type.clone(),
+                    source: Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("{}", source))) as Box<dyn Error + Send + Sync>,
+                }
+            }
+            InferenceError::InputValidation { field, issue } => {
+                InferenceError::InputValidation {
+                    field: field.clone(),
+                    issue: issue.clone(),
+                }
+            }
+            InferenceError::ModelNotFound { model_id } => {
+                InferenceError::ModelNotFound {
+                    model_id: model_id.clone(),
+                }
+            }
+            InferenceError::InsufficientMemory { required_mb, available_mb } => {
+                InferenceError::InsufficientMemory {
+                    required_mb: *required_mb,
+                    available_mb: *available_mb,
+                }
+            }
+            InferenceError::DeviceUnavailable { device, reason } => {
+                InferenceError::DeviceUnavailable {
+                    device: device.clone(),
+                    reason: reason.clone(),
+                }
+            }
+            InferenceError::InferenceTimeout { operation, duration } => {
+                InferenceError::InferenceTimeout {
+                    operation: operation.clone(),
+                    duration: *duration,
+                }
+            }
+            InferenceError::InvalidInputFormat { input, expected } => {
+                InferenceError::InvalidInputFormat {
+                    input: input.clone(),
+                    expected: expected.clone(),
+                }
+            }
+            InferenceError::OutputGenerationFailed { stage, details } => {
+                InferenceError::OutputGenerationFailed {
+                    stage: stage.clone(),
+                    details: details.clone(),
+                }
+            }
+            InferenceError::BatchProcessingFailed { batch_size, reason } => {
+                InferenceError::BatchProcessingFailed {
+                    batch_size: *batch_size,
+                    reason: reason.clone(),
+                }
+            }
+            InferenceError::StreamingError { operation, details } => {
+                InferenceError::StreamingError {
+                    operation: operation.clone(),
+                    details: details.clone(),
+                }
+            }
+            InferenceError::ResourceTemporarilyUnavailable { resource, reason } => {
+                InferenceError::ResourceTemporarilyUnavailable {
+                    resource: resource.clone(),
+                    reason: reason.clone(),
+                }
+            }
+            InferenceError::ConfigurationError { parameter, value } => {
+                InferenceError::ConfigurationError {
+                    parameter: parameter.clone(),
+                    value: value.clone(),
+                }
+            }
+            InferenceError::PerformanceContractViolation { contract_type, metric, threshold, actual } => {
+                InferenceError::PerformanceContractViolation {
+                    contract_type: contract_type.clone(),
+                    metric: metric.clone(),
+                    threshold: *threshold,
+                    actual: *actual,
+                }
+            }
+            InferenceError::SessionCreationFailed { reason } => {
+                InferenceError::SessionCreationFailed {
+                    reason: reason.clone(),
+                }
+            }
+            InferenceError::TokenizationError { reason } => {
+                InferenceError::TokenizationError {
+                    reason: reason.clone(),
+                }
+            }
+            InferenceError::DetokenizationError { reason } => {
+                InferenceError::DetokenizationError {
+                    reason: reason.clone(),
+                }
+            }
+        }
+    }
+}
+
 /// Pipeline-level errors with comprehensive context
-#[derive(Error, Debug)]
+#[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum PipelineError {
     #[error("Database operation failed: {operation} on {table}")]
     Database {
