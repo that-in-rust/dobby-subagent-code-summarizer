@@ -6,10 +6,10 @@ description = "Real Candle RS LLM inference for Tokio code summarization"
 
 [dependencies]
 # Candle RS with Metal acceleration for Apple Silicon
-candle = { version = "0.4", features = ["metal"] }
-candle-nn = { version = "0.4", features = ["metal"] }
-candle-transformers = { version = "0.4", features = ["metal"] }
-candle-flash-attn = { version = "0.4", optional = true }
+candle-core = "0.9.2-alpha.1"
+candle-nn = "0.9.2-alpha.1"
+candle-transformers = "0.9.2-alpha.1"
+candle-flash-attn = { version = "0.9.2-alpha.1", optional = true }
 hf-hub = "0.3"
 safetensors = "0.4"
 anyhow = "1.0"
@@ -18,7 +18,7 @@ anyhow = "1.0"
 tokenizers = "0.19"
 
 # Async trait support for main dependencies too
-async-trait = { workspace = true }
+async-trait = "0.1"
 
 # UUID for main code
 uuid = { version = "1.0", features = ["v4", "serde"] }
@@ -31,14 +31,14 @@ futures = "0.3"
 thiserror = "1.0"
 
 # Serialization for config parsing
-serde = { workspace = true }
-serde_json = { workspace = true }
+serde = "1.0"
+serde_json = "1.0"
 
 # Tokenization
 # tokenizers = { workspace = true } # Using direct dependency above
 
 # System metrics
-sysinfo = { workspace = true }
+sysinfo = "0.30"
 
 # CPU core count detection for parallel processing
 num_cpus = "1.16"
@@ -47,10 +47,10 @@ num_cpus = "1.16"
 rand = "0.8"
 
 # CLI argument parsing
-clap = { workspace = true }
+clap = { version = "4.0", features = ["derive"] }
 
 # Date/time for file naming
-chrono = { workspace = true }
+chrono = { version = "0.4", features = ["serde"] }
 
 # Logging
 log = "0.4"
@@ -72,7 +72,7 @@ mockall = "0.12"  # Mocking framework for TDD
 tokio-test = "0.4"
 
 # Async trait support
-async-trait = { workspace = true }
+async-trait = "0.1"
 
 # UUID generation for tests
 uuid = { version = "1.0", features = ["v4", "serde"] }
@@ -84,18 +84,18 @@ rand = "0.8"
 async-stream = "0.3"
 
 # Production monitoring and observability
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Production-quality synchronization
-parking_lot = { workspace = true }
+parking_lot = "0.12"
 
 # Enhanced async utilities
-tokio-util = { workspace = true }
+tokio-util = "0.7"
 tokio-stream = "0.1"
 
 # Exponential backoff for retry logic
-backoff = { workspace = true }
+backoff = "0.4"
 
 # Test utilities
 pretty_assertions = "1.4"  # Better diff output
@@ -128,4 +128,4 @@ panic = "abort"
 
 [profile.dev]
 debug = true
-overflow-checks = true
+overflow-checks = truecozo = "0.10"
