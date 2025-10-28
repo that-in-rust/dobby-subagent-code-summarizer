@@ -35,6 +35,9 @@ pub mod test_green_phase_simple;
 // REFACTOR phase tests for production-ready features
 pub mod test_refactor_phase;
 
+// Phase 5: Metal Device Detection Tests (TDD RED)
+pub mod metal_device_detection_tests;
+
 // Common test utilities and helpers
 // pub mod test_common;  // Commented out due to compilation errors
 
