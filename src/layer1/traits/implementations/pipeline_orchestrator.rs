@@ -187,8 +187,8 @@ pub struct PerformanceMetrics {
 impl PipelineOrchestrator {
     /// Create new pipeline orchestrator
     pub fn new(
-        inference_engine: Arc<dyn InferenceEngine<Output = InferenceResult, Error = InferenceError>>,
-        database_provider: Arc<dyn DatabaseProvider<Error = DatabaseError>>,
+        inference_engine: Arc<dyn InferenceEngine<Output = InferenceResult<()>, Error = InferenceError, Input = String, ModelInfo = ()>>,
+        database_provider: Arc<dyn DatabaseProvider<Error = DatabaseError, Connection = ()>>,
         config: PipelineConfig,
     ) -> Self {
         Self {

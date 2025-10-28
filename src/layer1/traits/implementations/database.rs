@@ -34,6 +34,12 @@ pub enum MockDatabaseError {
 
     #[error("Database unavailable: {0}")]
     Unavailable(String),
+
+    #[error("Invalid connection string: {0}")]
+    InvalidConnectionString(String),
+
+    #[error("Resource limit exhausted: {resource} used {used}/{limit}")]
+    ResourceLimitExhausted { resource: String, used: usize, limit: usize },
 }
 
 impl DobbyError for MockDatabaseError {
@@ -655,6 +661,25 @@ impl MockTestFactory {
     pub fn with_max_connections(mut self, max: usize) -> Self {
         self.max_connections = max;
         self
+    }
+
+    /// Generate mock records for testing and demonstration
+    pub async fn generate_mock_records(&self, _query: &str, _params: &QueryParams) -> Vec<DatabaseRecord> {
+        let mut records = Vec::new();
+
+        for i in 0..5 {
+            let record = DatabaseRecord {
+                id: RecordId::new(),
+                content: format!("Mock content for record {}", i + 1),
+                metadata: std::collections::HashMap::from([
+                    ("source".to_string(), serde_json::Value::String("mock_generator".to_string())),
+                    ("timestamp".to_string(), serde_json::Value::String(chrono::Utc::now().to_rfc3339())),
+                ]),
+            };
+            records.push(record);
+        }
+
+        records
     }
 }
 

@@ -258,6 +258,10 @@ impl QueryParams {
     pub fn get(&self, name: &str) -> Option<&serde_json::Value> {
         self.params.get(name)
     }
+
+    pub fn params(&self) -> &HashMap<String, serde_json::Value> {
+        &self.params
+    }
 }
 
 /// Database record for processing
