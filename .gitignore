@@ -98,8 +98,9 @@ Thumbs.db
 Cargo.lock
 **/*.rs.bk
 
-# ONNX Runtime cache
-.ort_cache/
+# Candle RS cache and artifacts
+.candle_cache/
+.metal_cache/
 
 # Temporary summary files and outputs
 /tmp/
@@ -118,8 +119,9 @@ test_sample_Summary_*.md
 export_*.py
 quantization_summary.md
 
-# Prevent accidental inclusion of onnxruntime-genai directory
+# Prevent accidental inclusion of model runtime directories
 onnxruntime-genai/
+candle-artifacts/
 
 # Reference GitHub repositories (do not commit)
 .doNotCommit/.refGitHubRepo/
