@@ -1,0 +1,127 @@
+[package]
+name = "dobby-subagent-code-summarizer"
+version = "0.1.0"
+edition = "2021"
+description = "Real ONNX LLM inference for Tokio code summarization"
+
+[dependencies]
+# ONNX Runtime 1.16.3 for ML inference (latest available stable version)
+ort = { version = "1.16.3", default-features = false, features = ["load-dynamic", "half"] }
+ndarray = "0.15"
+anyhow = "1.0"
+
+# Tokenization
+tokenizers = "0.19"
+
+# Async trait support for main dependencies too
+async-trait = { workspace = true }
+
+# UUID for main code
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Async runtime
+tokio = { version = "1.0", features = ["full"] }
+futures = "0.3"
+
+# Error handling
+thiserror = "1.0"
+
+# Serialization for config parsing
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Tokenization
+# tokenizers = { workspace = true } # Using direct dependency above
+
+# System metrics
+sysinfo = { workspace = true }
+
+# CPU core count detection for parallel processing
+num_cpus = "1.16"
+
+# Random sampling for temperature
+rand = "0.8"
+
+# CLI argument parsing
+clap = { workspace = true }
+
+# Date/time for file naming
+chrono = { workspace = true }
+
+# Logging
+log = "0.4"
+env_logger = "0.11"
+
+[build-dependencies]
+# bindgen = { workspace = true }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+tempfile = "3.8"
+
+# TDD testing framework
+proptest = "1.4"  # Property-based testing
+quickcheck = "1.0"  # QuickCheck for property testing
+mockall = "0.12"  # Mocking framework for TDD
+
+# Async testing
+tokio-test = "0.4"
+
+# Async trait support
+async-trait = { workspace = true }
+
+# UUID generation for tests
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Random number generation for mock behavior
+rand = "0.8"
+
+# Async streams for realistic mock behavior
+async-stream = "0.3"
+
+# Production monitoring and observability
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Production-quality synchronization
+parking_lot = { workspace = true }
+
+# Enhanced async utilities
+tokio-util = { workspace = true }
+tokio-stream = "0.1"
+
+# Exponential backoff for retry logic
+backoff = { workspace = true }
+
+# Test utilities
+pretty_assertions = "1.4"  # Better diff output
+insta = "1.34"  # Snapshot testing
+
+# Memory and resource monitoring for performance contracts
+memory-stats = "1.1"  # Memory usage tracking
+psutil = "3.2"  # Process and system monitoring
+
+# Test data generation
+fake = { version = "2.8", features = ["derive", "chrono", "uuid"] }
+rand_chacha = "0.3"  # Better randomness for tests
+
+# HTTP mocking for external dependency tests
+wiremock = "0.5"
+
+# Testcontainers for integration testing (if needed later)
+# NOTE: Commented out for RED phase due to version conflicts
+# testcontainers = "0.15"
+# testcontainers-modules = { version = "0.8", features = ["postgres"] }
+
+[[bin]]
+name = "parallel_summarizer"
+path = "src/bin/parallel_summarizer.rs"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.dev]
+debug = true
+overflow-checks = true

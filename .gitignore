@@ -1,0 +1,125 @@
+# Rust build artifacts
+/target/
+Cargo.lock
+*.pdb
+*.exe
+
+# Python cache and artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.cache
+*.bak
+*.backup
+
+# Model files (large - consider if should be in repo)
+# Uncomment these lines if model files are too large for git
+# *.onnx
+# *.safetensors
+# *.bin
+# *.gguf
+
+# OS generated files
+.DS_Store?
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Test outputs and temporary files
+/tests/output/
+/tmp/
+/temp/
+
+# Documentation build artifacts
+/docs/_build/
+/site/
+
+# Profiling and benchmarking data
+*.prof
+*.profile
+*.flame
+*.perf
+
+# Backup files
+*.old
+*.orig
+*.rej
+
+# Git ignore for tokenizer_dir (it contains its own .git)
+/tokenizer_dir/.git/
+
+# Rust specific
+/target/
+Cargo.lock
+**/*.rs.bk
+
+# ONNX Runtime cache
+.ort_cache/
+
+# Temporary summary files and outputs
+/tmp/
+*_Summary_*.md
+*_FAILED_*.md
+iggy_apache_Summary_*.md
+test_sample_Summary_*.md
+
+# Progress and result files
+/tmp/*.log
+/tmp/*.md
+/progress*.log
+/results*.log
+
+# Model quantization exports
+export_*.py
+quantization_summary.md
+
+# Prevent accidental inclusion of onnxruntime-genai directory
+onnxruntime-genai/
+
+# Reference GitHub repositories (do not commit)
+.doNotCommit/.refGitHubRepo/

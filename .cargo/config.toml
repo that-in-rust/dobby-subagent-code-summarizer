@@ -1,0 +1,60 @@
+# Cargo configuration for dobby-subagent-code-summarizer
+# Optimized for TDD-first development with comprehensive testing
+
+[build]
+# Enable parallel build for faster development
+jobs = 4
+
+[env]
+# Enable debug logging for tests
+RUST_LOG = "debug"
+# Enable backtraces for better error reporting
+RUST_BACKTRACE = "1"
+# Enable test output capture
+RUST_TEST_THREADS = "4"
+
+# Test configuration
+[target.'cfg(all(target_arch = "aarch64", target_os = "macos"))']
+# Apple Silicon specific optimizations
+rustflags = ["-C", "target-cpu=native"]
+
+[target.'cfg(all(target_arch = "x86_64", target_os = "macos"))']
+# Intel Mac specific optimizations
+rustflags = ["-C", "target-cpu=native"]
+
+[target.'cfg(target_os = "linux")']
+# Linux specific optimizations
+rustflags = ["-C", "target-cpu=native"]
+
+# Development profile with optimizations for testing
+[profile.dev]
+opt-level = 1  # Some optimization for faster test execution
+debug = true
+overflow-checks = true
+lto = false
+codegen-units = 16  # Faster compilation
+
+# Test profile optimized for TDD
+[profile.test]
+opt-level = 1  # Some optimization for performance tests
+debug = true
+overflow-checks = true
+lto = false
+codegen-units = 16
+incremental = true
+
+# Release profile for production
+[profile.release]
+opt-level = 3
+debug = false
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+# Benchmark profile for performance validation
+[profile.bench]
+opt-level = 3
+debug = true
+lto = true
+codegen-units = 1
