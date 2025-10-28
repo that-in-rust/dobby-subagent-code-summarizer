@@ -32,6 +32,7 @@ use serde::{Deserialize, Serialize};
 use super::error::{PipelineError, DobbyError};
 use super::database::SummaryId;
 use super::inference::{ModelConfig, OptimizationConfig};
+use super::types::{BatchConfig, SessionConfig, DatabaseId};
 
 /// Pipeline configuration trait for type safety
 pub trait PipelineConfig: Send + Sync + Debug {

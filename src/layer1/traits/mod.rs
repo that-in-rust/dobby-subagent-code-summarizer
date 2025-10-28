@@ -14,6 +14,7 @@ pub mod database;
 pub mod error;
 pub mod inference;
 pub mod pipeline;
+pub mod types;
 
 // GREEN PHASE: Minimal implementations
 pub mod implementations;
@@ -27,3 +28,4 @@ pub use database::*;
 pub use error::*;
 pub use inference::*;
 pub use pipeline::*;
+pub use types::*;

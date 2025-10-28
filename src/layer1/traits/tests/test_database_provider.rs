@@ -88,15 +88,8 @@ impl DatabaseConnection for MockDatabaseConnection {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-enum MockDatabaseError {
-    #[error("Not implemented - RED PHASE")]
-    NotImplemented,
-    #[error("Connection failed: {0}")]
-    ConnectionFailed(String),
-    #[error("Query error: {0}")]
-    QueryError(String),
-}
+// Use the main MockDatabaseError from the implementation module
+use super::super::implementations::database::MockDatabaseError;
 
 impl DatabaseError for MockDatabaseError {
     fn error_code(&self) -> u32 {

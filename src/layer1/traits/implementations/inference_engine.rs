@@ -13,6 +13,9 @@ use std::time::{Duration, Instant};
 use futures::Stream;
 use tokio_stream::wrappers::ReceiverStream;
 use tokio::sync::mpsc;
+
+#[cfg(feature = "memory-stats")]
+use memory_stats;
 use uuid::Uuid;
 
 /// Adapter that implements InferenceEngine trait for OptimizedInferenceEngine
@@ -161,6 +164,44 @@ impl InferenceEngine for TraitInferenceEngine {
         Ok(inference_result)
     }
 
+    /// Model capabilities and performance characteristics
+    fn model_info(&self) -> &Self::ModelInfo {
+        &self.model_info
+    }
+
+    /// Health check with model validation
+    async fn health_check(&self) -> Result<ModelHealth, Self::Error> {
+        // Quick health check with simple inference
+        let test_input = "fn health_check() { return true; }";
+        let start_time = std::time::Instant::now();
+
+        let result = self.infer(test_input.to_string()).await;
+        let response_time = start_time.elapsed();
+
+        match result {
+            Ok(_) => Ok(ModelHealth::Healthy),
+            Err(_) => Ok(ModelHealth::Unhealthy {
+                reason: "Health check inference failed".to_string(),
+                error: InferenceError::ModelNotLoaded {
+                    model_path: "health_check".to_string(),
+                    source: Box::new(std::io::Error::new(std::io::ErrorKind::Other, "test failed")),
+                },
+            }),
+        }
+    }
+
+    /// Get available sessions for concurrent processing
+    async fn session_info(&self) -> Result<SessionInfo, Self::Error> {
+        let info = self.session_pool.get_info().await;
+        Ok(info)
+    }
+}
+
+// Import the extension trait and related types
+use super::super::inference::{InferenceEngineExt, BatchOptions, BenchmarkCase, BenchmarkResults, ModelHealth, SessionInfo};
+
+#[async_trait]
+impl InferenceEngineExt for TraitInferenceEngine {
     async fn infer_batch(
         &self,
         inputs: Vec<Self::Input>,
@@ -318,10 +359,6 @@ impl InferenceEngine for TraitInferenceEngine {
         Ok(ReceiverStream::new(rx))
     }
 
-    fn model_info(&self) -> &Self::ModelInfo {
-        &self.model_info
-    }
-
     async fn benchmark(&self, test_cases: &[BenchmarkCase]) -> Result<BenchmarkResults, Self::Error> {
         let start_time = Instant::now();
         let mut results = Vec::new();
@@ -433,36 +470,6 @@ impl InferenceEngine for TraitInferenceEngine {
             },
             contract_violations: violations,
         })
-    }
-
-    async fn session_info(&self) -> Result<SessionInfo, Self::Error> {
-        let info = self.session_pool.get_info().await;
-        Ok(info)
-    }
-
-    async fn health_check(&self) -> Result<ModelHealth, Self::Error> {
-        // Quick health check with simple inference
-        let test_input = "fn health_check() { return true; }";
-
-        let start = Instant::now();
-        match self.infer(test_input.to_string()).await {
-            Ok(_) => {
-                let response_time = start.elapsed();
-
-                if response_time > Duration::from_millis(100) {
-                    Ok(ModelHealth::Degraded {
-                        reason: "Slow response time".to_string(),
-                        impact: DegradationImpact::Performance,
-                    })
-                } else {
-                    Ok(ModelHealth::Healthy)
-                }
-            }
-            Err(e) => Ok(ModelHealth::Unhealthy {
-                reason: format!("Health check inference failed: {}", e),
-                error: e,
-            }),
-        }
     }
 }
 
@@ -629,7 +636,14 @@ fn estimate_token_count(text: &str) -> usize {
 
 fn estimate_memory_usage() -> usize {
     // Get current memory usage if available
-    memory_stats::memory_stats()
-        .map(|stats| stats.physical_mem)
-        .unwrap_or(0) / 1024 / 1024 // Convert to MB
+    #[cfg(feature = "memory-stats")]
+    {
+        memory_stats::memory_stats()
+            .map(|stats| stats.physical_mem)
+            .unwrap_or(0) / 1024 / 1024 // Convert to MB
+    }
+    #[cfg(not(feature = "memory-stats"))]
+    {
+        512 // Default fallback when memory-stats feature is not available
+    }
 }

@@ -20,6 +20,7 @@ use super::super::{
     database::{DatabaseProvider, DatabaseProviderExt, DatabaseConnection, ConnectionInfo, DatabaseRecord as TraitDatabaseRecord, QueryParams, HealthStatus as TraitHealthStatus, BatchResult, BatchOperation, DatabaseRow, DatabaseValue, TryFromRow, OperationType},
     error::{DobbyError, DatabaseError},
     inference::ModelId,
+    types::DatabaseId,
 };
 
 // Mock error type
@@ -484,60 +485,6 @@ impl DatabaseProvider for MockDatabaseProvider {
     }
 }
 
-/// GREEN PHASE: Custom error type for mock database operations
-#[derive(Debug, thiserror::Error)]
-pub enum MockDatabaseError {
-    #[error("Mock implementation error: {message}")]
-    MockError { message: String },
-
-    #[error("Connection failed: {message}")]
-    ConnectionFailed { message: String },
-
-    #[error("Query timeout after {duration:?}")]
-    QueryTimeout { duration: Duration },
-
-    #[error("Invalid connection string: {connection_string}")]
-    InvalidConnectionString { connection_string: String },
-
-    #[error("Simulated resource exhaustion: {resource} limit {limit}")]
-    ResourceExhaustion { resource: String, limit: usize },
-
-    #[error("Query execution failed: {query}")]
-    QueryFailed { query: String },
-}
-
-impl DatabaseError for MockDatabaseError {
-    fn error_code(&self) -> u32 {
-        match self {
-            Self::MockError { .. } => 9001, // Use 9xxx for mock errors
-            Self::ConnectionFailed { .. } => 2001,
-            Self::QueryTimeout { .. } => 2002,
-            Self::InvalidConnectionString { .. } => 2003,
-            Self::ResourceExhaustion { .. } => 2004,
-            Self::QueryFailed { .. } => 2005,
-        }
-    }
-
-    fn is_retryable(&self) -> bool {
-        matches!(self,
-            Self::ConnectionFailed { .. } |
-            Self::QueryTimeout { .. } |
-            Self::ResourceExhaustion { .. }
-        )
-    }
-
-    fn error_type(&self) -> crate::layer1::traits::error::ErrorType {
-        use crate::layer1::traits::error::ErrorType;
-        match self {
-            Self::MockError { .. } => ErrorType::Logic,
-            Self::ConnectionFailed { .. } => ErrorType::Infrastructure,
-            Self::QueryTimeout { .. } => ErrorType::Performance,
-            Self::InvalidConnectionString { .. } => ErrorType::Configuration,
-            Self::ResourceExhaustion { .. } => ErrorType::Resource,
-            Self::QueryFailed { .. } => ErrorType::Data,
-        }
-    }
-}
 
 /// GREEN PHASE: Simple performance tracking for contract validation
 #[derive(Debug, Clone)]
