@@ -1,11 +1,8 @@
-//! GREEN PHASE: Mock Database Provider Implementation
+//! Mock Database Provider Implementation
 //!
 //! This implementation provides realistic behavior while clearly marking itself
 //! as a mock intended for TDD development. It follows Rust idiomatic patterns
 //! for async operations, error handling, and resource management.
-
-// GREEN PHASE: Use local definitions since traits module is disabled
-// This is temporary until we resolve the trait import issues
 
 use async_trait::async_trait;
 use std::collections::HashMap;
@@ -16,116 +13,54 @@ use tokio::sync::Mutex;
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 
-// Minimal trait definitions for GREEN phase testing
-// These will be replaced by the actual trait imports once resolved
+use async_stream::stream;
 
-pub trait DatabaseConnection: Send + Sync {
-    type Error: std::error::Error + Send + Sync + 'static;
+// Import the traits we need
+use super::super::{
+    database::{DatabaseProvider, DatabaseProviderExt, DatabaseConnection, ConnectionInfo, DatabaseRecord as TraitDatabaseRecord, QueryParams, HealthStatus as TraitHealthStatus, BatchResult, BatchOperation, DatabaseRow, DatabaseValue, TryFromRow, OperationType},
+    error::{DobbyError, DatabaseError},
+    inference::ModelId,
+};
 
-    async fn is_healthy(&self) -> Result<bool, Self::Error>;
-    async fn close(&self) -> Result<(), Self::Error>;
-    fn connection_info(&self) -> ConnectionInfo;
+// Mock error type
+#[derive(Debug, thiserror::Error)]
+pub enum MockDatabaseError {
+    #[error("Connection failed: {0}")]
+    ConnectionFailed(String),
+
+    #[error("Query failed: {0}")]
+    QueryFailed(String),
+
+    #[error("Database unavailable: {0}")]
+    Unavailable(String),
 }
 
-#[async_trait]
-pub trait DatabaseProvider: Send + Sync + 'static {
-    type Connection: DatabaseConnection + Send + Sync;
-    type Error: std::error::Error + Send + Sync + 'static;
-
-    async fn connect(&self) -> Result<Self::Connection, Self::Error>;
-    async fn execute_query<Q, P, R>(&self, query: Q, params: P) -> Result<Vec<R>, Self::Error>
-    where
-        Q: AsRef<str> + Send + Sync,
-        P: Into<QueryParams> + Send,
-        R: TryFromRow + Send;
-}
-
-// Type definitions
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DatabaseId(pub Uuid);
-
-#[derive(Debug, Clone)]
-pub struct ConnectionInfo {
-    pub database_id: DatabaseId,
-    pub created_at: DateTime<Utc>,
-    pub last_used: DateTime<Utc>,
-    pub query_count: u64,
-    pub active: bool,
-}
-
-#[derive(Debug, Clone)]
-pub struct QueryParams {
-    params: HashMap<String, serde_json::Value>,
-}
-
-impl QueryParams {
-    pub fn new() -> Self {
-        Self::default()
+impl DobbyError for MockDatabaseError {
+    fn severity(&self) -> super::super::error::ErrorSeverity {
+        super::super::error::ErrorSeverity::Error
     }
 
-    pub fn len(&self) -> usize {
-        self.params.len()
+    fn retry_recommendation(&self) -> super::super::error::RetryRecommendation {
+        super::super::error::RetryRecommendation::Retry
     }
-}
 
-impl Default for QueryParams {
-    fn default() -> Self {
-        Self {
-            params: HashMap::new(),
+    fn context(&self) -> super::super::error::ErrorContext {
+        super::super::error::ErrorContext {
+            timestamp: chrono::Utc::now(),
+            component: "mock_database".to_string(),
+            operation: "mock_operation".to_string(),
+            metadata: std::collections::HashMap::new(),
+            trace: vec![],
         }
     }
-}
 
-impl<T> From<T> for QueryParams
-where
-    T: Into<QueryParams>,
-{
-    fn from(value: T) -> Self {
-        value.into()
+    fn is_retryable(&self) -> bool {
+        true
     }
-}
 
-pub trait TryFromRow: Sized {
-    type Error: std::error::Error + Send + Sync + 'static;
-
-    fn try_from_row(row: &DatabaseRow) -> Result<Self, Self::Error>;
-}
-
-pub struct DatabaseRow {
-    pub columns: HashMap<String, DatabaseValue>,
-}
-
-#[derive(Debug, Clone)]
-pub enum DatabaseValue {
-    Text(String),
-    Integer(i64),
-    Float(f64),
-    Boolean(bool),
-    Binary(Vec<u8>),
-    Null,
-}
-
-pub trait BatchOperation: Send + Sync {
-    fn execute(&self, connection: &mut dyn std::any::Any) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
-    fn operation_type(&self) -> OperationType;
-}
-
-#[derive(Debug, Clone)]
-pub enum OperationType {
-    Insert,
-    Update,
-    Delete,
-    Create,
-    Drop,
-}
-
-#[derive(Debug, Clone)]
-pub struct BatchResult {
-    pub total_operations: usize,
-    pub successful_operations: usize,
-    pub failed_operations: usize,
-    pub duration: Duration,
-    pub errors: Vec<String>,
+    fn category(&self) -> super::super::error::ErrorCategory {
+        super::super::error::ErrorCategory::Database
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -221,12 +156,6 @@ macro_rules! warn {
         println!("[WARN] {}", format!($($arg)*));
     };
 }
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tokio::sync::Mutex;
-use uuid::Uuid;
 
 /// GREEN PHASE: Mock database provider with realistic behavior simulation
 #[derive(Debug)]
@@ -505,131 +434,27 @@ impl DatabaseProvider for MockDatabaseProvider {
         Ok(connection)
     }
 
-    async fn execute_query<Q, P, R>(&self, query: Q, params: P) -> Result<Vec<R>, Self::Error>
-    where
-        Q: AsRef<str> + Send + Sync,
-        P: Into<QueryParams> + Send,
-        R: TryFromRow + Send,
-    {
-        let tracker = PerformanceTracker::new("execute_query", Duration::from_millis(50));
-
-        let query_str = query.as_ref();
-        let params_obj = params.into();
-
-        tracing::debug!(
-            query = %query_str,
-            params_count = params_obj.params.len(),
-            "Executing mock database query"
-        );
-
-        // Simulate query execution
-        let result = self.simulate_query_execution::<R>(query_str, &params_obj).await?;
-
-        tracker.check_contract()?;
-        Ok(result)
-    }
-
-    async fn fetch_records_stream(
+    async fn execute_query_simple(
         &self,
         query: &str,
         params: QueryParams,
-    ) -> Result<impl futures::Stream<Item = Result<DatabaseRecord, Self::Error>> + Send, Self::Error> {
-        let tracker = PerformanceTracker::new("fetch_records_stream", Duration::from_millis(100));
+    ) -> Result<Vec<DatabaseRecord>, Self::Error> {
+        let tracker = PerformanceTracker::new("execute_query_simple", Duration::from_millis(50));
 
         tracing::debug!(
             query = %query,
             params_count = params.params.len(),
-            "Starting mock database stream"
+            "Executing mock database query"
         );
 
-        // Estimate result size for streaming simulation
-        let record_count = self.estimate_result_size(query, &params).await?;
-        let provider_config = Arc::new(MockDatabaseProvider {
-            connection_string: self.connection_string.clone(),
-            connections: Arc::new(Mutex::new(Vec::new())),
-            query_latency: self.query_latency,
-            failure_rate: self.failure_rate,
-            max_connections: self.max_connections,
-        });
-
-        // Create a stream that respects backpressure
-        let stream = async_stream::stream! {
-            for i in 0..record_count {
-                // Simulate realistic record processing time
-                tokio::time::sleep(Duration::from_millis(1)).await;
-
-                // Generate mock record
-                match provider_config.generate_mock_record(i).await {
-                    Ok(record) => yield Ok(record),
-                    Err(e) => yield Err(e),
-                }
-
-                // Simulate occasional latency spikes
-                if i % 100 == 0 {
-                    tokio::time::sleep(Duration::from_millis(10)).await;
-                }
-            }
-        };
-
-        tracker.check_contract()?;
-        Ok(stream)
-    }
-
-    async fn execute_batch<T>(
-        &self,
-        operations: impl IntoIterator<Item = T> + Send,
-    ) -> Result<BatchResult, Self::Error>
-    where
-        T: BatchOperation + Send + Sync,
-    {
-        let tracker = PerformanceTracker::new("execute_batch", Duration::from_secs(1));
-
-        let operations: Vec<T> = operations.into_iter().collect();
-        let total_operations = operations.len();
-
-        tracing::debug!(
-            total_operations = total_operations,
-            "Executing mock batch operations"
-        );
-
-        let mut successful_operations = 0;
-        let mut failed_operations = 0;
-        let mut errors = Vec::new();
-        let start_time = Instant::now();
-
-        // Simulate batch processing with realistic timing
-        for (index, operation) in operations.into_iter().enumerate() {
-            // Simulate operation timing
-            tokio::time::sleep(Duration::from_millis(1)).await;
-
-            // Check for random failures
-            if let Err(e) = self.simulate_random_failure().await {
-                failed_operations += 1;
-                errors.push(format!("Operation {} failed: {}", index, e));
-            } else {
-                successful_operations += 1;
-            }
-
-            // Simulate occasional batch delays
-            if index % 50 == 0 {
-                tokio::time::sleep(Duration::from_millis(10)).await;
-            }
-        }
-
-        let duration = start_time.elapsed();
-
-        let result = BatchResult {
-            total_operations,
-            successful_operations,
-            failed_operations,
-            duration,
-            errors,
-        };
+        // Simulate query execution
+        let result = self.simulate_query_execution_simple(query, &params).await?;
 
         tracker.check_contract()?;
         Ok(result)
     }
 
+  
     async fn health_check(&self) -> Result<HealthStatus, Self::Error> {
         let tracker = PerformanceTracker::new("health_check", Duration::from_millis(50));
 
@@ -751,6 +576,99 @@ impl PerformanceTracker {
             }
         }
         Ok(())
+    }
+}
+
+// Implement the extension trait for advanced features
+impl DatabaseProviderExt for MockDatabaseProvider {
+    async fn fetch_records_stream(
+        &self,
+        query: &str,
+        params: QueryParams,
+    ) -> Result<Box<dyn futures::Stream<Item = Result<DatabaseRecord, Self::Error>> + Send>, Self::Error> {
+        let tracker = PerformanceTracker::new("fetch_records_stream", Duration::from_millis(100));
+
+        tracing::debug!(
+            query = %query,
+            params_count = params.params.len(),
+            "Starting mock stream query"
+        );
+
+        let provider = self.clone();
+        let query = query.to_string();
+        let params_clone = params.clone();
+
+        let stream = stream! {
+            // Simulate streaming results
+            let mock_records = provider.generate_mock_records(&query, &params_clone).await;
+            for record in mock_records {
+                // Simulate streaming delay
+                tokio::time::sleep(Duration::from_millis(10)).await;
+                yield Ok(record);
+            }
+        };
+
+        tracker.check_contract()?;
+        Ok(Box::pin(stream))
+    }
+
+    async fn execute_batch<T>(
+        &self,
+        operations: impl IntoIterator<Item = T> + Send,
+    ) -> Result<BatchResult, Self::Error>
+    where
+        T: BatchOperation + Send + Sync,
+    {
+        let tracker = PerformanceTracker::new("execute_batch", Duration::from_secs(1));
+
+        let operations: Vec<T> = operations.into_iter().collect();
+        let total_operations = operations.len();
+
+        tracing::debug!(
+            total_operations = total_operations,
+            "Executing mock batch operations"
+        );
+
+        let mut successful_operations = 0;
+        let mut failed_operations = 0;
+        let mut errors = Vec::new();
+        let start_time = Instant::now();
+
+        // Simulate batch processing with realistic timing
+        for (index, _operation) in operations.into_iter().enumerate() {
+            // Simulate operation timing
+            tokio::time::sleep(Duration::from_millis(1)).await;
+
+            // Check for random failures
+            if let Err(e) = self.simulate_random_failure().await {
+                failed_operations += 1;
+                errors.push(format!("Operation {} failed: {}", index, e));
+            } else {
+                successful_operations += 1;
+            }
+
+            // Simulate occasional batch delays
+            if index % 50 == 0 {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        }
+
+        let duration = start_time.elapsed();
+
+        let result = BatchResult {
+            total_operations,
+            successful_operations,
+            failed_operations,
+            duration,
+            errors,
+        };
+
+        tracker.check_contract()?;
+        Ok(result)
+    }
+
+    fn create_conversion_error(&self, message: String) -> Self::Error {
+        MockDatabaseError::QueryFailed(message)
     }
 }
 

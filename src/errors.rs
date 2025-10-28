@@ -6,8 +6,6 @@ use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, ProcessingError>;
 
-// Type alias for backward compatibility
-pub type InferenceError = ProcessingError;
 
 #[derive(Error, Debug)]
 pub enum ProcessingError {

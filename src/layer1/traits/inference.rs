@@ -29,7 +29,8 @@ use async_trait::async_trait;
 use std::fmt::Debug;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use crate::errors::{ProcessingError, InferenceError};
+use crate::errors::ProcessingError;
+use super::error::InferenceError;
 use super::error::DobbyError;
 
 /// Model identifier with type safety
@@ -252,6 +253,7 @@ pub enum ContractViolation {
 }
 
 /// Core inference abstraction with session pooling and Metal acceleration
+/// Object-safe trait methods for dynamic dispatch
 #[async_trait]
 pub trait InferenceEngine: Send + Sync + 'static {
     /// Input type for inference
@@ -308,6 +310,44 @@ pub trait InferenceEngine: Send + Sync + 'static {
     /// - Success rate: > 99%
     async fn infer(&self, input: Self::Input) -> Result<Self::Output, Self::Error>;
 
+    /// Model capabilities and performance characteristics
+    fn model_info(&self) -> &Self::ModelInfo;
+
+    /// Health check with model validation
+    ///
+    /// ## Contract
+    ///
+    /// ### Preconditions:
+    /// - Model is loaded
+    ///
+    /// ### Postconditions:
+    /// - Returns model health status
+    /// - Validates model integrity
+    ///
+    /// ### Performance Contract:
+    /// - Response time: < 100ms
+    async fn health_check(&self) -> Result<ModelHealth, Self::Error>;
+
+    /// Get available sessions for concurrent processing
+    ///
+    /// ## Contract
+    ///
+    /// ### Preconditions:
+    /// - Model is loaded
+    ///
+    /// ### Postconditions:
+    /// - Returns current session count
+    /// - Provides session utilization metrics
+    ///
+    /// ### Performance Contract:
+    /// - Response time: < 10ms
+    async fn session_info(&self) -> Result<SessionInfo, Self::Error>;
+}
+
+/// Extension trait for advanced inference features with generic methods
+/// Pattern A.9: Separate object-safe core from generic extensions
+#[async_trait]
+pub trait InferenceEngineExt: InferenceEngine {
     /// Batch inference with parallel processing
     ///
     /// ## Contract
@@ -331,7 +371,14 @@ pub trait InferenceEngine: Send + Sync + 'static {
         &self,
         inputs: Vec<Self::Input>,
         options: BatchOptions,
-    ) -> Result<Vec<Self::Output>, Self::Error>;
+    ) -> Result<Vec<Self::Output>, Self::Error> {
+        // Default implementation processes items sequentially
+        let mut results = Vec::with_capacity(inputs.len());
+        for input in inputs {
+            results.push(self.infer(input).await?);
+        }
+        Ok(results)
+    }
 
     /// Streaming inference for large inputs
     ///
@@ -353,10 +400,7 @@ pub trait InferenceEngine: Send + Sync + 'static {
     async fn infer_stream(
         &self,
         input_stream: impl futures::Stream<Item = Self::Input> + Send,
-    ) -> Result<impl futures::Stream<Item = Result<Self::Output, Self::Error>> + Send, Self::Error>;
-
-    /// Model capabilities and performance characteristics
-    fn model_info(&self) -> &Self::ModelInfo;
+    ) -> Result<Box<dyn futures::Stream<Item = Result<Self::Output, Self::Error>> + Send>, Self::Error>;
 
     /// Performance benchmarking with contract validation
     ///
@@ -375,36 +419,6 @@ pub trait InferenceEngine: Send + Sync + 'static {
     /// - Benchmark execution: < 5 minutes
     /// - Report generation: < 30 seconds
     async fn benchmark(&self, test_cases: &[BenchmarkCase]) -> Result<BenchmarkResults, Self::Error>;
-
-    /// Get available sessions for concurrent processing
-    ///
-    /// ## Contract
-    ///
-    /// ### Preconditions:
-    /// - Model is loaded
-    ///
-    /// ### Postconditions:
-    /// - Returns current session count
-    /// - Provides session utilization metrics
-    ///
-    /// ### Performance Contract:
-    /// - Response time: < 10ms
-    async fn session_info(&self) -> Result<SessionInfo, Self::Error>;
-
-    /// Health check with model validation
-    ///
-    /// ## Contract
-    ///
-    /// ### Preconditions:
-    /// - Model is loaded
-    ///
-    /// ### Postconditions:
-    /// - Returns model health status
-    /// - Validates model integrity
-    ///
-    /// ### Performance Contract:
-    /// - Response time: < 100ms
-    async fn health_check(&self) -> Result<ModelHealth, Self::Error>;
 }
 
 /// Session information for monitoring

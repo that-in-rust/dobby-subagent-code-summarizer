@@ -55,21 +55,23 @@ clap = { version = "4.0", features = ["derive"] }
 # Async streams for tokio compatibility
 tokio-stream = "0.1"
 
+# Async stream creation for dynamic streams
+async-stream = "0.3"
+
 # Date/time for file naming
 chrono = { version = "0.4", features = ["serde"] }
 
-# ONNX Runtime for model inference
-ort = { version = "1.16", features = ["load-dynamic"] }
 
 # Logging
 log = "0.4"
 env_logger = "0.11"
+tracing = "0.1"
+tracing-subscriber = "0.3"
 
 # Database dependencies (temporarily disabled for TDD phase)
 # cozo = "0.7"  # Disabled due to compilation conflicts
 
 # Array operations for ONNX compatibility
-ndarray = "0.15"
 
 [build-dependencies]
 # bindgen = { workspace = true }

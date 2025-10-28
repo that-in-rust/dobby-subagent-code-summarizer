@@ -30,6 +30,16 @@ use std::fmt::Debug;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use super::error::{PipelineError, DobbyError};
+use super::database::SummaryId;
+use super::inference::{ModelConfig, OptimizationConfig};
+
+/// Pipeline configuration trait for type safety
+pub trait PipelineConfig: Send + Sync + Debug {
+    fn database_config(&self) -> &DatabaseConfig;
+    fn inference_config(&self) -> &InferenceConfig;
+    fn processing_config(&self) -> &ProcessingConfig;
+    fn monitoring_config(&self) -> &MonitoringConfig;
+}
 
 /// Pipeline identifier for tracking
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -135,7 +145,7 @@ pub struct PipelineCheckpoint {
 
 /// Pipeline configuration with comprehensive settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PipelineConfig {
+pub struct PipelineConfiguration {
     pub database_config: DatabaseConfig,
     pub inference_config: InferenceConfig,
     pub processing_config: ProcessingConfig,
@@ -211,6 +221,33 @@ pub struct BackpressureConfig {
     pub backpressure_threshold: f64,
     pub adaptive_scaling: bool,
     pub slow_query_threshold: std::time::Duration,
+}
+
+/// Concrete pipeline configuration implementation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConcretePipelineConfig {
+    pub database_config: DatabaseConfig,
+    pub inference_config: InferenceConfig,
+    pub processing_config: ProcessingConfig,
+    pub monitoring_config: MonitoringConfig,
+}
+
+impl PipelineConfig for ConcretePipelineConfig {
+    fn database_config(&self) -> &DatabaseConfig {
+        &self.database_config
+    }
+
+    fn inference_config(&self) -> &InferenceConfig {
+        &self.inference_config
+    }
+
+    fn processing_config(&self) -> &ProcessingConfig {
+        &self.processing_config
+    }
+
+    fn monitoring_config(&self) -> &MonitoringConfig {
+        &self.monitoring_config
+    }
 }
 
 /// High-level pipeline orchestration with comprehensive monitoring

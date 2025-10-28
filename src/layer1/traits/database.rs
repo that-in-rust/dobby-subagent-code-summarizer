@@ -50,6 +50,7 @@ pub trait DatabaseConnection: Send + Sync {
 }
 
 /// Core database abstraction with async support and comprehensive error handling
+/// Object-safe trait methods for dynamic dispatch
 #[async_trait]
 pub trait DatabaseProvider: Send + Sync + 'static {
     /// Connection type with lifetime management
@@ -75,6 +76,48 @@ pub trait DatabaseProvider: Send + Sync + 'static {
     /// - Memory allocation: < 10MB
     async fn connect(&self) -> Result<Self::Connection, Self::Error>;
 
+    /// Execute simple query with basic parameter binding
+    ///
+    /// ## Contract
+    ///
+    /// ### Preconditions:
+    /// - Valid SQL query syntax
+    /// - Parameters match query placeholders
+    /// - Connection is active
+    ///
+    /// ### Postconditions:
+    /// - Returns Vec<DatabaseRecord> on successful execution
+    /// - Connection remains valid after execution
+    ///
+    /// ### Performance Contract:
+    /// - Single record query: < 50ms
+    /// - 100 record query: < 500ms
+    async fn execute_query_simple(
+        &self,
+        query: &str,
+        params: QueryParams,
+    ) -> Result<Vec<DatabaseRecord>, Self::Error>;
+
+    /// Health check with connection validation
+    ///
+    /// ## Contract
+    ///
+    /// ### Preconditions:
+    /// - Connection pool is accessible
+    ///
+    /// ### Postconditions:
+    /// - Returns current health status
+    /// - Updates internal health metrics
+    ///
+    /// ### Performance Contract:
+    /// - Response time: < 50ms
+    async fn health_check(&self) -> Result<HealthStatus, Self::Error>;
+}
+
+/// Extension trait for advanced database features with generic methods
+/// Pattern A.9: Separate object-safe core from generic extensions
+#[async_trait]
+pub trait DatabaseProviderExt: DatabaseProvider {
     /// Execute query with parameter binding and result mapping
     ///
     /// ## Contract
@@ -101,7 +144,24 @@ pub trait DatabaseProvider: Send + Sync + 'static {
     where
         Q: AsRef<str> + Send + Sync,
         P: Into<QueryParams> + Send,
-        R: TryFromRow + Send;
+        R: TryFromRow + Send,
+    {
+        // Convert to simple query for basic implementations
+        let records = self.execute_query_simple(query.as_ref(), params.into()).await?;
+        let mut results = Vec::with_capacity(records.len());
+
+        for record in records {
+            let row = DatabaseRow {
+                columns: convert_record_to_row(record),
+            };
+            results.push(R::try_from_row(&row).map_err(|e| {
+                // Convert to appropriate error type - placeholder for now
+                self.create_conversion_error(format!("Row conversion failed: {}", e))
+            })?);
+        }
+
+        Ok(results)
+    }
 
     /// Fetch records with streaming support for large datasets
     ///
@@ -124,7 +184,7 @@ pub trait DatabaseProvider: Send + Sync + 'static {
         &self,
         query: &str,
         params: QueryParams,
-    ) -> Result<impl futures::Stream<Item = Result<DatabaseRecord, Self::Error>> + Send, Self::Error>;
+    ) -> Result<Box<dyn futures::Stream<Item = Result<DatabaseRecord, Self::Error>> + Send>, Self::Error>;
 
     /// Batch operation with transaction support
     ///
@@ -150,20 +210,33 @@ pub trait DatabaseProvider: Send + Sync + 'static {
     where
         T: BatchOperation + Send + Sync;
 
-    /// Health check with connection validation
-    ///
-    /// ## Contract
-    ///
-    /// ### Preconditions:
-    /// - Connection pool is accessible
-    ///
-    /// ### Postconditions:
-    /// - Returns current health status
-    /// - Updates internal health metrics
-    ///
-    /// ### Performance Contract:
-    /// - Response time: < 50ms
-    async fn health_check(&self) -> Result<HealthStatus, Self::Error>;
+    /// Helper method to create conversion errors
+    fn create_conversion_error(&self, message: String) -> Self::Error;
+}
+
+// Helper function to convert DatabaseRecord to DatabaseRow
+fn convert_record_to_row(record: DatabaseRecord) -> std::collections::HashMap<String, DatabaseValue> {
+    let mut columns = std::collections::HashMap::new();
+
+    // Convert record fields to database values
+    columns.insert("id".to_string(), DatabaseValue::Text(record.id.0.to_string()));
+    columns.insert("created_at".to_string(), DatabaseValue::Text(record.created_at.to_rfc3339()));
+    columns.insert("updated_at".to_string(), DatabaseValue::Text(record.updated_at.to_rfc3339()));
+
+    // Convert content based on type
+    match record.content {
+        Content::Text(text) => {
+            columns.insert("content".to_string(), DatabaseValue::Text(text));
+        }
+        Content::Binary(data) => {
+            columns.insert("content".to_string(), DatabaseValue::Binary(data));
+        }
+        Content::Structured(json) => {
+            columns.insert("content".to_string(), DatabaseValue::Text(json.to_string()));
+        }
+    }
+
+    columns
 }
 
 /// Parameterized query parameters with type safety

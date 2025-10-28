@@ -361,6 +361,17 @@ pub enum ErrorCategory {
     User,
 }
 
+/// Error types for detailed classification and handling
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ErrorType {
+    Logic,
+    Infrastructure,
+    Performance,
+    Configuration,
+    Resource,
+    Data,
+}
+
 // Implement DobbyError for all error types
 impl DobbyError for DatabaseError {
     fn severity(&self) -> ErrorSeverity {
