@@ -220,9 +220,7 @@ impl MockDatabaseProvider {
             use rand::Rng;
             let mut rng = rand::thread_rng();
             if rng.gen::<f64>() < self.failure_rate {
-                return Err(MockDatabaseError::ConnectionFailed {
-                    message: "Simulated random connection failure".to_string(),
-                });
+                return Err(MockDatabaseError::ConnectionFailed("Simulated random connection failure".to_string()));
             }
         }
         Ok(())
@@ -231,16 +229,12 @@ impl MockDatabaseProvider {
     /// Validate connection string format
     async fn validate_connection_string(&self) -> Result<(), MockDatabaseError> {
         if self.connection_string.is_empty() {
-            return Err(MockDatabaseError::InvalidConnectionString {
-                connection_string: self.connection_string.clone(),
-            });
+            return Err(MockDatabaseError::InvalidConnectionString("Connection string cannot be empty".to_string()));
         }
 
         // Basic format validation for common patterns
         if !self.connection_string.contains("://") {
-            return Err(MockDatabaseError::InvalidConnectionString {
-                connection_string: self.connection_string.clone(),
-            });
+            return Err(MockDatabaseError::InvalidConnectionString(format!("Invalid connection string format: {}", self.connection_string)));
         }
 
         Ok(())

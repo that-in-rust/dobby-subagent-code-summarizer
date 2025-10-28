@@ -283,10 +283,9 @@ impl Clone for InferenceError {
                     available_mb: *available_mb,
                 }
             }
-            InferenceError::DeviceUnavailable { device, reason } => {
+            InferenceError::DeviceUnavailable { device_type } => {
                 InferenceError::DeviceUnavailable {
-                    device: device.clone(),
-                    reason: reason.clone(),
+                    device_type: device_type.clone(),
                 }
             }
             InferenceError::InferenceTimeout { operation, duration } => {
@@ -295,10 +294,9 @@ impl Clone for InferenceError {
                     duration: *duration,
                 }
             }
-            InferenceError::InvalidInputFormat { input, expected } => {
+            InferenceError::InvalidInputFormat { input_type } => {
                 InferenceError::InvalidInputFormat {
-                    input: input.clone(),
-                    expected: expected.clone(),
+                    input_type: input_type.clone(),
                 }
             }
             InferenceError::OutputGenerationFailed { stage, details } => {
