@@ -187,8 +187,8 @@ pub struct PerformanceMetrics {
 impl PipelineOrchestrator {
     /// Create new pipeline orchestrator
     pub fn new(
-        inference_engine: Arc<dyn InferenceEngine<Output = InferenceResult<()>, Error = InferenceError, Input = String, ModelInfo = ()>>,
-        database_provider: Arc<dyn DatabaseProvider<Error = DatabaseError, Connection = ()>>,
+        inference_engine: Arc<dyn InferenceEngine<Output = InferenceResult<crate::layer1::traits::inference::ConcreteModelInfo>, Error = InferenceError, Input = String, ModelInfo = crate::layer1::traits::inference::ConcreteModelInfo>>,
+        database_provider: Arc<dyn DatabaseProvider<Error = DatabaseError, Connection = crate::layer1::traits::implementations::database::MockDatabaseConnection>>,
         config: PipelineConfig,
     ) -> Self {
         Self {
@@ -559,7 +559,7 @@ impl PipelineOrchestrator {
 
     fn calculate_retry_delay(&self, attempt: usize) -> Duration {
         let delay = (self.config.retry_config.base_delay as f64 * self.config.retry_config.backoff_multiplier.powi(attempt as i32)) as u32;
-        Duration::from_millis(std::cmp::min(delay, self.config.retry_config.max_delay))
+        std::cmp::min(Duration::from_millis(delay as u64), self.config.retry_config.max_delay)
     }
 
     async fn store_file_metadata(&self, job_id: &JobId, path: &str, size: usize) -> Result<(), PipelineError> {

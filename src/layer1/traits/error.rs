@@ -257,6 +257,11 @@ pub enum PipelineError {
         component: String,
         message: String,
     },
+
+    #[error("System error: {message}")]
+    System {
+        message: String,
+    },
 }
 
 // Manual Clone implementation for PipelineError
@@ -345,6 +350,11 @@ impl Clone for PipelineError {
             PipelineError::Monitoring { component, message } => {
                 PipelineError::Monitoring {
                     component: component.clone(),
+                    message: message.clone(),
+                }
+            }
+            PipelineError::System { message } => {
+                PipelineError::System {
                     message: message.clone(),
                 }
             }
@@ -639,6 +649,7 @@ impl DobbyError for PipelineError {
             PipelineError::CheckpointError { .. } => ErrorSeverity::Error,
             PipelineError::RecoveryFailed { .. } => ErrorSeverity::Error,
             PipelineError::Monitoring { .. } => ErrorSeverity::Warning,
+            PipelineError::System { .. } => ErrorSeverity::Critical,
         }
     }
 
@@ -657,6 +668,7 @@ impl DobbyError for PipelineError {
             PipelineError::CheckpointError { .. } => RetryRecommendation::NoRetry,
             PipelineError::RecoveryFailed { .. } => RetryRecommendation::Retry,
             PipelineError::Monitoring { .. } => RetryRecommendation::Retry,
+            PipelineError::System { .. } => RetryRecommendation::NoRetry,
         }
     }
 
@@ -680,6 +692,7 @@ impl DobbyError for PipelineError {
                 PipelineError::CheckpointError { checkpoint_id, .. } => "manage_checkpoint".to_string(),
                 PipelineError::RecoveryFailed { .. } => "recover_pipeline".to_string(),
                 PipelineError::Monitoring { component, .. } => format!("monitor_{}", component),
+                PipelineError::System { .. } => "handle_system_error".to_string(),
             },
             metadata: std::collections::HashMap::new(),
             trace: vec![],
@@ -708,6 +721,7 @@ impl DobbyError for PipelineError {
             PipelineError::CheckpointError { .. } => ErrorCategory::Pipeline,
             PipelineError::RecoveryFailed { .. } => ErrorCategory::Pipeline,
             PipelineError::Monitoring { .. } => ErrorCategory::System,
+            PipelineError::System { .. } => ErrorCategory::System,
         }
     }
 }
