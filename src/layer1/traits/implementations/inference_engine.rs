@@ -506,7 +506,7 @@ impl TraitModelInfo {
                 supports_streaming: true,
                 supports_batching: true,
                 supports_quantization: true,
-                supported_formats: vec!["onnx".to_string()],
+                supported_formats: vec!["safetensors".to_string(), "ggml".to_string()],
             },
             performance: ModelPerformance {
                 tokens_per_second: 50.0,

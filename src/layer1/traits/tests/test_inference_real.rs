@@ -21,12 +21,12 @@ impl RealModelTestConfig {
     async fn new() -> Vec<Self> {
         vec![
             Self {
-                model_path: PathBuf::from("./models/qwen2.5-0.5b-int4/model_quantized.onnx"),
+                model_path: PathBuf::from("./models/qwen2.5-0.5b-int4/model.safetensors"),
                 tokenizer_path: PathBuf::from("./tokenizer_dir/tokenizer.json"),
                 should_exist: true,
             },
             Self {
-                model_path: PathBuf::from("./models/smollm2-135m/model.onnx"),
+                model_path: PathBuf::from("./models/smollm2-135m/model.safetensors"),
                 tokenizer_path: PathBuf::from("./models/smollm2-135m/tokenizer.json"),
                 should_exist: false, // Fallback test
             },

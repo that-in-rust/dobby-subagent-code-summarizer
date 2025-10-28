@@ -10,7 +10,7 @@ fn main() {
 
     // Check model directory structure
     let model_path = Path::new("./models/qwen2.5-0.5b-int4");
-    let model_file = model_path.join("model_quantized.onnx");
+    let model_file = model_path.join("model.safetensors");
 
     println!("\n📁 Checking model structure:");
     println!("   Model directory: {}", model_path.display());
@@ -76,7 +76,7 @@ fn main() {
 
     // Check if we have the right structure for the OptimizedInferenceEngine
     println!("\n🎯 OptimizedInferenceEngine Requirements:");
-    println!("   Expected model path: ./models/qwen2.5-0.5b-int4/model_quantized.onnx");
+    println!("   Expected model path: ./models/qwen2.5-0.5b-int4/model.safetensors");
     println!("   Expected tokenizer path: ./tokenizer_dir/tokenizer.json");
 
     let model_ok = model_file.exists();
@@ -89,7 +89,7 @@ fn main() {
     } else {
         println!("\n❌ SETUP INCOMPLETE: Some required files are missing.");
         if !model_ok {
-            println!("   - Missing: model_quantized.onnx");
+            println!("   - Missing: model.safetensors");
         }
         if !tokenizer_ok {
             println!("   - Missing: tokenizer.json");

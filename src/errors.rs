@@ -1,4 +1,4 @@
-//! Error types for ONNX parallel processing
+//! Error types for Candle RS parallel processing
 //!
 //! TDD-First: Structured error handling with thiserror for library
 
@@ -54,8 +54,8 @@ pub enum ProcessingError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
-    #[error("ONNX Runtime error: {0}")]
-    OrtError(String),
+    #[error("Candle RS error: {0}")]
+    CandleError(String),
 
     #[error("Tokenizer loading failed: {source}")]
     TokenizerLoadFailed {
@@ -78,10 +78,10 @@ pub enum ProcessingError {
     },
 }
 
-// Convert ort::Error to ProcessingError (ort 1.16.3 compatibility)
-// impl From<ort::Error> for ProcessingError {
-//     fn from(err: ort::Error) -> Self {
-//         ProcessingError::OrtError(err.to_string())
-//     }
-// }
+// Convert candle::Error to ProcessingError
+impl From<candle::Error> for ProcessingError {
+    fn from(err: candle::Error) -> Self {
+        ProcessingError::CandleError(err.to_string())
+    }
+}
 

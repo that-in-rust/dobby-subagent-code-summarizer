@@ -115,7 +115,7 @@ impl SystemConfig {
     pub fn production() -> Self {
         Self {
             tokio_source_path: PathBuf::from("/Users/amuldotexe/Projects/transfiguration/tokio-rs-tokio-8a5edab282632443.txt"),
-            model_path: PathBuf::from("models/torch_model.onnx"),
+            model_path: PathBuf::from("models/model.safetensors"),
             max_concurrent_sessions: 20,
             max_memory_mb: 4096,
             chunk_size: 300,
@@ -128,7 +128,7 @@ impl SystemConfig {
     pub fn test_config() -> Self {
         Self {
             tokio_source_path: PathBuf::from("test_data/sample.txt"),
-            model_path: PathBuf::from("models/torch_model.onnx"),
+            model_path: PathBuf::from("models/model.safetensors"),
             max_concurrent_sessions: 4,
             max_memory_mb: 1024,
             chunk_size: 50,
@@ -141,7 +141,7 @@ impl SystemConfig {
     pub fn performance_test_config() -> Self {
         Self {
             tokio_source_path: PathBuf::from("test_data/large.txt"),
-            model_path: PathBuf::from("models/torch_model.onnx"),
+            model_path: PathBuf::from("models/model.safetensors"),
             max_concurrent_sessions: 20,
             max_memory_mb: 4096,
             chunk_size: 300,

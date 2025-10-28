@@ -1,10 +1,10 @@
 //! Real Neural Code Summarization Library
 //!
 //! Production-ready implementation with session reuse architecture
-//! Real ONNX inference with Qwen2.5-0.5B-Instruct model
+//! Real Candle RS inference with high-performance models
 
 pub mod chunking;
-pub mod inference;  // ort 1.16.3 real inference implementation
+pub mod inference;  // Candle RS high-performance inference implementation
 pub mod parallel_agents;  // 20-agent parallel processing architecture
 pub mod config;
 pub mod errors;

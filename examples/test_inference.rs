@@ -16,7 +16,7 @@ fn main() {
     println!("📁 Tokenizer path: {:?}", tokenizer_path);
 
     // Check if files exist
-    let model_file = model_path.join("model_quantized.onnx");
+    let model_file = model_path.join("model.safetensors");
     let tokenizer_file = tokenizer_path.join("tokenizer.json");
 
     println!("🔍 Checking model file: {:?}", model_file);

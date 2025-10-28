@@ -23,7 +23,7 @@ async fn create_test_orchestrator() -> Result<PipelineOrchestrator, Box<dyn std:
     );
 
     // Create inference engine (fallback to mock if no real model)
-    let inference_engine = if PathBuf::from("./models/qwen2.5-0.5b-int4/model_quantized.onnx").exists() {
+    let inference_engine = if PathBuf::from("./models/qwen2.5-0.5b-int4/model.safetensors").exists() {
         let engine = TraitInferenceEngine::new(
             PathBuf::from("./models/qwen2.5-0.5b-int4"),
             PathBuf::from("./tokenizer_dir"),

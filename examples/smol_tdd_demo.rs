@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=====================================");
     println!("🔬 RED Phase: Comprehensive failing tests ✓");
     println!("🌱 GREEN Phase: Minimal satisfying implementation ✓");
-    println!("🔧 REFACTOR Phase: Ready for ONNX integration");
+    println!("🔧 REFACTOR Phase: Ready for Candle RS integration");
     println!("📊 Real Data: 49,152 vocabulary, actual SmolLM2 components");
 
     Ok(())

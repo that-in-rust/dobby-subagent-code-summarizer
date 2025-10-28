@@ -2,12 +2,16 @@
 name = "dobby-subagent-code-summarizer"
 version = "0.1.0"
 edition = "2021"
-description = "Real ONNX LLM inference for Tokio code summarization"
+description = "Real Candle RS LLM inference for Tokio code summarization"
 
 [dependencies]
-# ONNX Runtime 1.16.3 for ML inference (latest available stable version)
-ort = { version = "1.16.3", default-features = false, features = ["load-dynamic", "half"] }
-ndarray = "0.15"
+# Candle RS with Metal acceleration for Apple Silicon
+candle = { version = "0.4", features = ["metal"] }
+candle-nn = { version = "0.4", features = ["metal"] }
+candle-transformers = { version = "0.4", features = ["metal"] }
+candle-flash-attn = { version = "0.4", optional = true }
+hf-hub = "0.3"
+safetensors = "0.4"
 anyhow = "1.0"
 
 # Tokenization

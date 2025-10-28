@@ -315,8 +315,8 @@ async fn create_inference_engine() -> Result<std::sync::Arc<dyn InferenceEngine<
     let model_path = PathBuf::from("./models/qwen2.5-0.5b-int4");
     let tokenizer_path = PathBuf::from("./tokenizer_dir");
 
-    if model_path.join("model_quantized.onnx").exists() && tokenizer_path.join("tokenizer.json").exists() {
-        println!("🤖 Using real ONNX inference engine");
+    if model_path.join("model.safetensors").exists() && tokenizer_path.join("tokenizer.json").exists() {
+        println!("🤖 Using real Candle RS inference engine");
         let engine = TraitInferenceEngine::new(model_path, tokenizer_path)?;
         Ok(std::sync::Arc::new(engine))
     } else {

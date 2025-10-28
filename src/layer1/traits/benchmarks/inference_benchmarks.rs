@@ -49,7 +49,7 @@ async fn get_benchmark_engine() -> Option<TraitInferenceEngine> {
     let tokenizer_path = PathBuf::from("./tokenizer_dir");
 
     // Check if model files exist
-    if model_path.join("model_quantized.onnx").exists() &&
+    if model_path.join("model.safetensors").exists() &&
        tokenizer_path.join("tokenizer.json").exists() {
         match TraitInferenceEngine::new(model_path, tokenizer_path) {
             Ok(engine) => Some(engine),

@@ -86,7 +86,7 @@ mod tests {
             .expect_load_model()
             .returning(|_| {
                 Err(InferenceError::ModelLoading {
-                    model_path: "nonexistent/model.onnx".to_string(),
+                    model_path: "nonexistent/model.safetensors".to_string(),
                     source: Box::new(std::io::Error::new(
                         std::io::ErrorKind::NotFound,
                         "Model file not found"
@@ -96,7 +96,7 @@ mod tests {
             .times(1);
 
         let config = ModelConfig {
-            model_path: "nonexistent/model.onnx".to_string(),
+            model_path: "nonexistent/model.safetensors".to_string(),
             model_name: "test-model".to_string(),
             device: DeviceConfig {
                 device_type: DeviceType::Cpu,
@@ -108,7 +108,7 @@ mod tests {
             quantization: QuantizationConfig {
                 quantization_type: QuantizationType::None,
                 quantization_bits: None,
-                model_format: "onnx".to_string(),
+                model_format: "safetensors".to_string(),
             },
             session_pool: SessionPoolConfig {
                 max_sessions: 1,
@@ -140,7 +140,7 @@ mod tests {
         assert!(result.is_err());
         match result.unwrap_err() {
             InferenceError::ModelLoading { model_path, .. } => {
-                assert_eq!(model_path, "nonexistent/model.onnx");
+                assert_eq!(model_path, "nonexistent/model.safetensors");
             }
             _ => panic!("Expected ModelLoading error"),
         }
@@ -168,7 +168,7 @@ mod tests {
                 supports_streaming: true,
                 supports_batching: true,
                 supports_quantization: true,
-                supported_formats: vec!["onnx".to_string()],
+                supported_formats: vec!["safetensors".to_string()],
             },
             performance: ModelPerformance {
                 tokens_per_second: 50.0,
@@ -241,7 +241,7 @@ mod tests {
                                     supports_streaming: true,
                                     supports_batching: true,
                                     supports_quantization: true,
-                                    supported_formats: vec!["onnx".to_string()],
+                                    supported_formats: vec!["safetensors".to_string()],
                                 },
                                 performance: ModelPerformance {
                                     tokens_per_second: 50.0,
@@ -423,7 +423,7 @@ mod tests {
                                         supports_streaming: true,
                                         supports_batching: true,
                                         supports_quantization: true,
-                                        supported_formats: vec!["onnx".to_string()],
+                                        supported_formats: vec!["safetensors".to_string()],
                                     },
                                     performance: ModelPerformance {
                                         tokens_per_second: 50.0,
