@@ -29,13 +29,49 @@ use async_trait::async_trait;
 use std::fmt::Debug;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use crate::errors::ProcessingError;
-use super::error::InferenceError;
-use super::error::DobbyError;
+use super::error::{InferenceError, DobbyError};
+use uuid;
 
 /// Model identifier with type safety
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ModelId(pub uuid::Uuid);
+
+impl ModelId {
+    /// Create a new ModelId with a random UUID
+    pub fn new() -> Self {
+        Self(uuid::Uuid::new_v4())
+    }
+}
+
+impl Default for ModelId {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl From<String> for ModelId {
+    fn from(s: String) -> Self {
+        Self(uuid::Uuid::parse_str(&s).unwrap_or_else(|_| uuid::Uuid::new_v4()))
+    }
+}
+
+impl From<&str> for ModelId {
+    fn from(s: &str) -> Self {
+        Self(uuid::Uuid::parse_str(s).unwrap_or_else(|_| uuid::Uuid::new_v4()))
+    }
+}
+
+impl From<ModelId> for String {
+    fn from(id: ModelId) -> Self {
+        id.0.to_string()
+    }
+}
+
+impl std::fmt::Display for ModelId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 /// Inference session identifier
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

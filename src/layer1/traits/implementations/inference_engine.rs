@@ -183,7 +183,7 @@ impl InferenceEngine for TraitInferenceEngine {
             Err(_) => Ok(ModelHealth::Unhealthy {
                 reason: "Health check inference failed".to_string(),
                 error: InferenceError::ModelNotFound {
-                    model_id: "health_check".to_string(),
+                    model_id: ModelId::from("health_check"),
                 },
             }),
         }
